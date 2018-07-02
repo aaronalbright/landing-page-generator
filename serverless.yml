@@ -1,0 +1,13 @@
+service: lambda-test1 # NOTE: update this with your service name
+provider:
+  name: aws
+  runtime: nodejs6.10
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - schedule:
+          name: schedule-event-test
+          description: 'Feteches the Google Sheet once a day'
+          rate: cron(0 16 * * ? *)
+          enabled: true
