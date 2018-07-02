@@ -63,7 +63,7 @@ module.exports.hello = () => {
         })
         .then(() => {
           // LAMBDA DOES NOT SUPPORT CURRENT DIRECTORY
-          // Remove change './tmp' to '/tmp' in BOTH references.
+          // Change './tmp' to '/tmp' in BOTH references.
           fs.writeFile('./tmp/data.json', file, err => {
             if (err) throw err;
             console.log('Writing file...');
