@@ -2,10 +2,10 @@ let fs = require('fs');
 let request = require('axios');
 let { getHTML } = require('./helpers');
 let node_ssh = require('node-ssh');
-let key = require('./key');
+let KEY = require('./key');
 
 module.exports.hello = () => {
-  let id = '1jxqJXVwCgWZj6IErhbKCZlo5NtwEpOvZKGaC61zkMU0';
+  let id = KEY.ID;
   let sheet = 1;
 
   request(
@@ -41,10 +41,10 @@ module.exports.hello = () => {
 
       ssh
         .connect({
-          host: key.HOST,
-          username: key.USER,
+          host: KEY.HOST,
+          username: KEY.USER,
           port: 22,
-          password: key.PASS,
+          password: KEY.PASS,
           tryKeyboard: true,
           onKeyboardInteractive: (
             name,
@@ -57,7 +57,7 @@ module.exports.hello = () => {
               prompts.length > 0 &&
               prompts[0].prompt.toLowerCase().includes('password')
             ) {
-              finish([key.PASS]);
+              finish([KEY.PASS]);
             }
           }
         })
@@ -68,7 +68,7 @@ module.exports.hello = () => {
             if (err) throw err;
             console.log('Writing file...');
             ssh
-              .putFile('./tmp/data.json', key.PATH)
+              .putFile('./tmp/data.json', KEY.PATH)
               .then(() => {
                 console.log('File uploaded');
                 ssh.dispose();
