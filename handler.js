@@ -28,54 +28,53 @@ module.exports.hello = () => {
           .catch(err => console.log(err));
       });
 
-      let file;
-
       Promise.all(metaData).then(r => {
         if (r[0] !== undefined) console.log('JSON file created');
         else console.log('Failed to create JSON file');
 
-        file = JSON.stringify(r);
+        let file = JSON.stringify(r);
+        let ssh = new node_ssh();
+
+        ssh
+          .connect({
+            host: KEY.HOST,
+            username: KEY.USER,
+            port: 22,
+            password: KEY.PASS,
+            tryKeyboard: true,
+            onKeyboardInteractive: (
+              name,
+              instructions,
+              instructionsLang,
+              prompts,
+              finish
+            ) => {
+              if (
+                prompts.length > 0 &&
+                prompts[0].prompt.toLowerCase().includes('password')
+              ) {
+                finish([KEY.PASS]);
+              }
+            }
+          })
+          .then(() => {
+            // LAMBDA DOES NOT SUPPORT CURRENT DIRECTORY
+            // Change './tmp' to '/tmp' in BOTH references.
+            fs.writeFile('/tmp/file.json', file, err => {
+              if (err) throw err;
+              console.log('Writing file...');
+              ssh
+                .putFile('/tmp/file.json', KEY.PATH)
+                .then(() => {
+                  console.log('File uploaded');
+                  ssh.dispose();
+                })
+                .catch(err => console.log(err));
+            });
+          })
+          .catch(err => console.log(err));
       });
 
-      let ssh = new node_ssh();
-
-      ssh
-        .connect({
-          host: KEY.HOST,
-          username: KEY.USER,
-          port: 22,
-          password: KEY.PASS,
-          tryKeyboard: true,
-          onKeyboardInteractive: (
-            name,
-            instructions,
-            instructionsLang,
-            prompts,
-            finish
-          ) => {
-            if (
-              prompts.length > 0 &&
-              prompts[0].prompt.toLowerCase().includes('password')
-            ) {
-              finish([KEY.PASS]);
-            }
-          }
-        })
-        .then(() => {
-          // LAMBDA DOES NOT SUPPORT CURRENT DIRECTORY
-          // Change './tmp' to '/tmp' in BOTH references.
-          fs.writeFile('./tmp/data.json', file, err => {
-            if (err) throw err;
-            console.log('Writing file...');
-            ssh
-              .putFile('./tmp/data.json', KEY.PATH)
-              .then(() => {
-                console.log('File uploaded');
-                ssh.dispose();
-              })
-              .catch(err => console.log(err));
-          });
-        })
-        .catch(err => console.log(err));
+      
     });
 };
