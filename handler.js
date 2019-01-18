@@ -1,15 +1,16 @@
+require('dotenv').config();
 let fs = require('fs');
 let request = require('axios');
 let { getHTML } = require('./helpers');
 let node_ssh = require('node-ssh');
-let KEY = require('./key');
 
-module.exports.hello = () => {
-  let id = KEY.ID;
-  let sheet = 1;
+module.exports.scrape = () => {
+  let sheetNum = 1;
 
   request(
-    `https://spreadsheets.google.com/feeds/list/${id}/${sheet}/public/full?alt=json`
+    `https://spreadsheets.google.com/feeds/list/${
+    process.env.SHEET
+    }/${sheetNum}/public/full?alt=json`
   )
     .then(response => {
       let rows = response.data.feed;
@@ -29,18 +30,24 @@ module.exports.hello = () => {
       });
 
       Promise.all(metaData).then(r => {
-        if (r[0] !== undefined) console.log('JSON file created');
-        else console.log('Failed to create JSON file');
+        if (r[0] !== undefined) {
+          console.log('JSON file created');
+        } else {
+          throw new Error('Failed to create JSON file');
+        }
 
-        let file = JSON.stringify(r);
+        let sheetData = JSON.stringify(r);
         let ssh = new node_ssh();
+        const hst = process.env.HOST;
+        const user = process.env.USERNAME;
+        const pwd = process.env.PASSWORD;
 
         ssh
           .connect({
-            host: KEY.HOST,
-            username: KEY.USER,
+            host: hst,
+            username: user,
             port: 22,
-            password: KEY.PASS,
+            password: pwd,
             tryKeyboard: true,
             onKeyboardInteractive: (
               name,
@@ -53,18 +60,21 @@ module.exports.hello = () => {
                 prompts.length > 0 &&
                 prompts[0].prompt.toLowerCase().includes('password')
               ) {
-                finish([KEY.PASS]);
+                finish([pwd]);
               }
             }
           })
-          .then(() => {
-            // LAMBDA DOES NOT SUPPORT CURRENT DIRECTORY
-            // Change './tmp' to '/tmp' in BOTH references.
-            fs.writeFile('/tmp/file.json', file, err => {
+          .then(function () {
+            // Lambda doens't support "./" directory
+            // Change './tmp' to '/tmp' before deploy
+            let fileName = 'sc-urls.json';
+            let tmpPath = `./tmp/${fileName}`;
+
+            fs.writeFile(tmpPath, sheetData, err => {
               if (err) throw err;
               console.log('Writing file...');
               ssh
-                .putFile('/tmp/file.json', KEY.PATH)
+                .putFile(tmpPath, `${process.env.REMOTE_PATH}/${fileName}`)
                 .then(() => {
                   console.log('File uploaded');
                   ssh.dispose();
@@ -74,7 +84,5 @@ module.exports.hello = () => {
           })
           .catch(err => console.log(err));
       });
-
-      
     });
 };

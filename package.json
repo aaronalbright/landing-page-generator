@@ -6,6 +6,8 @@
   "dependencies": {
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
-    "node-ssh": "^5.1.1"
+    "dotenv": "^6.2.0",
+    "node-ssh": "^5.1.1",
+    "serverless-dotenv-plugin": "^2.0.1"
   }
 }

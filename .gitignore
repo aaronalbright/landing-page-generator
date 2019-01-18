@@ -3,6 +3,7 @@ node_modules
 jspm_packages
 key.js
 tmp
+.env
 
 # Serverless directories
 .serverless

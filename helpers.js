@@ -6,12 +6,8 @@ function getHTML(html, cols) {
   let body = $('body');
 
   let data = {
-    img: head
-      .find('[name="twitter:image"]')
-      .attr('content'),
-    title: head
-      .find('[property="og:title"]')
-      .attr('content'),
+    img: head.find('[name="twitter:image"]').attr('content'),
+    title: head.find('[property="og:title"]').attr('content'),
     date: body
       .find('.published-date:first-of-type')
       .text()
@@ -20,16 +16,14 @@ function getHTML(html, cols) {
     url: cols.url
   };
 
-  if (cols.section.toUpperCase() == 'LEAD') {
+  if (cols.section.toUpperCase() == 'META INFO') {
     data.headline = cols.headline;
     data.intro = cols.intro;
   }
 
-  if (cols.section.toUpperCase() == 'HERO') {
+  if (cols.section.toUpperCase() == 'TOP STORY') {
     data.hero = {};
-    data.hero.preview = head
-      .find('[name="description"]')
-      .attr('content');
+    data.hero.preview = head.find('[name="description"]').attr('content');
 
     let heroVideo = $('.lead-item > .video');
 
